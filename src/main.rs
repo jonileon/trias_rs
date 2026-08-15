@@ -1,5 +1,5 @@
 use dotenv::dotenv;
-use trias_vdv_431::requests::location_information_request::get_location_by_string;
+use trias_rs::requests::location_information_request::get_location_by_string;
 
 // example interaction
 const _EXAMPLE_PAYLOAD: &str = 
