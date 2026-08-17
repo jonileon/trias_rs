@@ -1,43 +1,38 @@
 use dotenv::var;
 use reqwest::Client;
+use serde::Serialize;
+use quick_xml::se::to_string;
 
-use crate::utils::request_building::build_header;
+use crate::utils::request_building::{TriasEnvelope, build_request_envelope};
 
+#[derive(Serialize)]
+struct LocationInformationRequestPayload {
+    #[serde(rename = "LocationInformationRequest")]
+    request_information: LocationInformationRequest,
+}
 
-fn get_payload_string_search(input: &str) -> String {
-    format!(
+#[derive(Serialize)]
+struct LocationInformationRequest {
+    #[serde(rename = "InitialInput")]
+    initial_input: InitialInput,
+}
 
-r#"
-<LocationInformationRequest>
-    <InitialInput>
-        <LocationName>"{}"</LocationName>
-    </InitialInput>
-</LocationInformationRequest>
-"#,
-        
-        input
-    )
+#[derive(Serialize)]
+struct InitialInput {
+    #[serde(rename = "LocationName")]
+    location_name: String
 }
 
 pub async fn get_location_by_string(input: &str) {
-    let payload = get_payload_string_search(input);
-    let (start, end) = build_header();
-    let req_body = format!(
-        "{}
-         {}
-         {}
-        ",
-        start,
-        payload,
-        end
-    );
+    let payload = LocationInformationRequestPayload{request_information: LocationInformationRequest{initial_input: InitialInput{ location_name: input.to_string() }}};
+    let body: TriasEnvelope<LocationInformationRequestPayload> = build_request_envelope(payload);
     let url = var("URL").expect("Missing env var URL");
     let client = Client::builder().build().unwrap();
-    println!("-------------REQUEST-------------");
-    println!("{}", req_body);
+    let body_str = to_string(&body).expect("Error while serializing xml");
+    println!("{}", body_str);
     let res = client.post(url)
         .header("Content-Type", "application/xml")
-        .body(req_body)
+        .body(body_str)
         .send()
         .await
         .unwrap()

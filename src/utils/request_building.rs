@@ -1,42 +1,52 @@
-use dotenv::var;
 use crate::utils::time_format::get_date_time_now;
+use crate::utils::env::{EnvVars, get_var};
+use serde::Serialize;
+use quick_xml::se::to_string;
 
-pub fn build_header() -> (String, String) {
-    let trias_v = var("TRIAS_VERSION").expect("Missing env var TRIAS_VERSION");
-    let xmlns = var("XMLNS").expect("Missing env var XMLNS");
-    let xsi_xmlns = var("XSI_XMLNS").expect("Missing env var XSI_XMLNS");
-    let xsi_schema_loc = var("XSI_SCHEMA_LOCATION").expect("Missing env var XSI_SCHEMA_LOCATION");
-    let siri_xmlns = var("SIRI_XMLNS").expect("Missing env var SIRI_XMLNS");
+#[derive(Serialize)]
+#[serde(rename = "Trias")]
+pub struct TriasEnvelope<T> {
+    #[serde(rename = "@version")]
+    pub version: String,
 
-    let rref = var("REQUESTOR_REF").expect("Mising env var REQUESTOR_REF");
+    #[serde(rename = "@xmlns")]
+    pub xmlns: String,
 
-    let start = format!(
-r#"
-<?xml version="1.0" encoding="UTF-8"?>
-<Trias version="{}" xmlns="{}" xmlns:siri="{}" xmlns:xsi="{}" xsi:schemaLocation="{}">
+    #[serde(rename = "@xmlns:siri")]
+    pub xmlns_siri: String,
 
-<ServiceRequest>
-<siri:RequestTimeStamp>{}</siri:RequestTimeStamp>
-<siri:RequestorRef>{}</siri:RequestorRef>
-<RequestPayload>"#,
+    #[serde(rename = "@xmlns:xsi")]
+    pub xmlns_xsi: String,
 
-        trias_v,
-        xmlns,
-        xsi_schema_loc,
-        xsi_xmlns,
-        siri_xmlns,
-        get_date_time_now(),
-        rref
-    );
-    (start, String::from(
+    #[serde(rename = "@xsi:schemaLocation")]
+    pub schema_location: String,
+    #[serde(rename = "ServiceRequest")]
+    request: ServiceRequest<T>,
+}
 
-r#"
-</RequestPayload>
-</ServiceRequest>   
+#[derive(Serialize)]
+pub struct ServiceRequest<T> {
+    #[serde(rename = "siri:RequestTimeStamp")]
+    request_timestamp: String,
+    #[serde(rename = "siri:RequestorRef")]
+    requestor_ref: String,
+    #[serde(rename = "RequestPayload")]
+    payload: T,
+}
 
-</Trias>
-"#
+pub fn build_request_envelope<T>(payload: T) -> TriasEnvelope<T> {
+    let version        = get_var(EnvVars::TriasVersion);
+    let xmlns          = get_var(EnvVars::Xmlns);
+    let xmlns_xsi      = get_var(EnvVars::XsiXmlns);
+    let schema_location = get_var(EnvVars::XsiSchemaLocation);
+    let xmlns_siri     = get_var(EnvVars::SiriXmlns);
 
-))
+    let rref = get_var(EnvVars::RequestorRef);
+
+    TriasEnvelope{ version, xmlns, xmlns_siri, schema_location, xmlns_xsi, request: ServiceRequest{
+        request_timestamp: get_date_time_now(),
+        requestor_ref: rref,
+        payload
+    } }
 }
 
