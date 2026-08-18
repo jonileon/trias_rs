@@ -1,4 +1,4 @@
-use dotenv::dotenv;
+use dotenv::{dotenv, var};
 use trias_rs::requests::location_information_request::get_location_by_string;
 
 // example interaction
@@ -30,6 +30,8 @@ r#"
 #[tokio::main]
 async fn main() {
     let _ = dotenv();
-    get_location_by_string("Durlacher Tor").await;
+    let url = var("URL").expect("no url specified");
+    get_location_by_string(&url, "Ettlinger Tor").await;
+    get_location_by_string(&url, "Karlsruhe Hbf").await;
 }
 
