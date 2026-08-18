@@ -69,7 +69,7 @@ struct InitialInput {
     location_name: String
 }
 
-pub async fn get_location_by_string(url: &str, input: &str) {
+pub async fn get_location_by_string(url: &str, input: &str) -> Result<Vec<LocationResult>, Box<dyn std::error::Error>> {
     let payload = LocationInformationRequestPayload{request_information: LocationInformationRequest{initial_input: InitialInput{ location_name: input.to_string()}, restrictions: Restrictions{ result_type: "stop"}}};
     let body: TriasRequestEnvelope<LocationInformationRequestPayload> = build_request_envelope(payload);
     let body_str = to_string(&body).expect("Error while serializing xml: LocationInformationRequest");
@@ -81,9 +81,7 @@ pub async fn get_location_by_string(url: &str, input: &str) {
         .send()
         .await
         .unwrap();
-    let result: TriasResponseEnvelope<LocationInformationResultPayload> = parse_response(res).await.unwrap();
-    for stop in result.service_delivery.payload.result_information.location_results {
-        println!("{:#?}", stop);
-    }
+    let result: TriasResponseEnvelope<LocationInformationResultPayload> = parse_response(res).await?;
+    Ok(result.service_delivery.payload.result_information.location_results)
 }
 

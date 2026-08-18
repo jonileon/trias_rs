@@ -31,7 +31,9 @@ r#"
 async fn main() {
     let _ = dotenv();
     let url = var("URL").expect("no url specified");
-    get_location_by_string(&url, "Ettlinger Tor").await;
-    get_location_by_string(&url, "Karlsruhe Hbf").await;
+    let result = get_location_by_string(&url, "Durlacher Tor/KIT-Campus Süd (U)").await.unwrap();
+    for stop in result {
+        println!("{:#?}", stop);
+    }
 }
 

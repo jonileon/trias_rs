@@ -72,7 +72,6 @@ pub async fn parse_response<T>(response: Response) -> Result<T, Box<dyn std::err
     let byte_stream = response
         .bytes_stream()
         .map_err(std::io::Error::other);
-
     let async_reader = StreamReader::new(byte_stream);
 
     let result = tokio::task::spawn_blocking(move || {
@@ -82,6 +81,5 @@ pub async fn parse_response<T>(response: Response) -> Result<T, Box<dyn std::err
         quick_xml::de::from_reader(buf_reader)
     })
     .await??;
-
     Ok(result)
 }
