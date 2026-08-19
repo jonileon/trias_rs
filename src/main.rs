@@ -1,5 +1,5 @@
 use dotenv::{dotenv, var};
-use trias_rs::requests::location_information_request::get_location_by_string;
+use trias_rs::requests::location_information_request::{get_location_by_ref, get_location_by_string};
 
 // example interaction
 const _EXAMPLE_PAYLOAD: &str = 
@@ -31,9 +31,11 @@ r#"
 async fn main() {
     let _ = dotenv();
     let url = var("URL").expect("no url specified");
-    let result = get_location_by_string(&url, "Durlacher Tor/KIT-Campus Süd (U)").await.unwrap();
-    for stop in result {
+    let result = get_location_by_string(&url, "Büchiger Alle").await.unwrap();
+    for stop in &result {
         println!("{:#?}", stop);
     }
+    let stop = get_location_by_ref(&url, &result.first().unwrap().location.stop_point.id).await.unwrap();
+    println!("{:#?}", stop);
 }
 

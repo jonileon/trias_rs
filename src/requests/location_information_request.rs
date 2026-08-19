@@ -16,19 +16,19 @@ pub struct LocationInformationResponse {
     pub location_results: Vec<LocationResult>
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct LocationResult {
     #[serde(rename = "Location")]
     pub location: Location,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct Location {
     #[serde(rename = "StopPoint")]
     pub stop_point: StopPoint,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct StopPoint {
     #[serde(rename = "StopPointRef")]
     pub id: String,
@@ -36,7 +36,7 @@ pub struct StopPoint {
     pub name: StopPointName,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct StopPointName {
     #[serde(rename = "Language")]
     pub lang: String,
@@ -96,3 +96,18 @@ pub async fn get_location_by_string(url: &str, input: &str) -> Result<Vec<Locati
     Ok(result.service_delivery.payload.result_information.location_results)
 }
 
+pub async fn get_location_by_ref(url: &str, stop_ref: &str) -> Result<LocationResult, Box<dyn std::error::Error>> {
+    let payload = LocationInformationRequestPayload{request_information: LocationInformationRequest{initial_input: None, location_ref: Some(LocationRef{ id: stop_ref.to_string() }), restrictions: Restrictions{ result_type: "stop"}}};
+    let body: TriasRequestEnvelope<LocationInformationRequestPayload> = build_request_envelope(payload);
+    let body_str = to_string(&body).expect("Error while serializing xml: LocationInformationRequest");
+
+    let client = Client::builder().build().unwrap();
+    let res = client.post(url)
+        .header("Content-Type", "application/xml")
+        .body(body_str)
+        .send()
+        .await
+        .unwrap();
+    let result: TriasResponseEnvelope<LocationInformationResultPayload> = parse_response(res).await?;
+    Ok(result.service_delivery.payload.result_information.location_results.first().unwrap().clone())
+}
