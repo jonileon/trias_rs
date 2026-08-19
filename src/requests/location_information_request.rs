@@ -52,8 +52,11 @@ struct LocationInformationRequestPayload {
 
 #[derive(Serialize)]
 struct LocationInformationRequest {
-    #[serde(rename = "InitialInput")]
-    initial_input: InitialInput,
+    #[serde(rename = "InitialInput", skip_serializing_if = "Option::is_none")]
+    initial_input: Option<InitialInput>,
+
+    #[serde(rename = "LocationRef", skip_serializing_if = "Option::is_none")]
+    location_ref: Option<LocationRef>,
     #[serde(rename = "Restrictions")]
     restrictions: Restrictions,
 }
@@ -63,14 +66,22 @@ struct Restrictions {
     #[serde(rename = "Type")]
     result_type: &'static str
 }
+
 #[derive(Serialize)]
 struct InitialInput {
     #[serde(rename = "LocationName")]
     location_name: String
 }
 
+#[derive(Serialize)]
+struct LocationRef {
+    #[serde(rename = "StopPointRef")]
+    id: String
+}
+
+
 pub async fn get_location_by_string(url: &str, input: &str) -> Result<Vec<LocationResult>, Box<dyn std::error::Error>> {
-    let payload = LocationInformationRequestPayload{request_information: LocationInformationRequest{initial_input: InitialInput{ location_name: input.to_string()}, restrictions: Restrictions{ result_type: "stop"}}};
+    let payload = LocationInformationRequestPayload{request_information: LocationInformationRequest{initial_input: Some(InitialInput{ location_name: input.to_string()}), location_ref: None, restrictions: Restrictions{ result_type: "stop"}}};
     let body: TriasRequestEnvelope<LocationInformationRequestPayload> = build_request_envelope(payload);
     let body_str = to_string(&body).expect("Error while serializing xml: LocationInformationRequest");
 
