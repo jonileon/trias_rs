@@ -1,5 +1,5 @@
 use dotenv::{dotenv, var};
-use trias_rs::requests::location_information_request::{get_location_by_ref, get_location_by_string};
+use trias_rs::requests::{location_information_request::{get_location_by_ref, get_location_by_string}, stop_event_request::get_trips_for_location};
 
 // example interaction
 const _EXAMPLE_PAYLOAD: &str = 
@@ -37,5 +37,7 @@ async fn main() {
     }
     let stop = get_location_by_ref(&url, &result.first().unwrap().location.stop_point.id).await.unwrap();
     println!("{:#?}", stop);
+
+    get_trips_for_location(&stop.location.stop_point.id, 2, &url).await;
 }
 

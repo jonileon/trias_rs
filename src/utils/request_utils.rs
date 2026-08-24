@@ -105,3 +105,22 @@ where
     let result: TriasResponseEnvelope<ResPay> = parse_response(res).await?;
     Ok(result.service_delivery.payload)
 }
+
+pub async fn send_request_test<ReqPay>(payload: ReqPay, url: &str) -> Result<(), Box<dyn std::error::Error>> 
+where 
+    ReqPay: serde::Serialize,
+{
+
+    let body: TriasRequestEnvelope<ReqPay> = build_request_envelope(payload);
+    let body_str = to_string(&body).expect("Error while serializing xml: LocationInformationRequest");
+
+    let client = Client::builder().build().unwrap();
+    let res = client.post(url)
+        .header("Content-Type", "application/xml")
+        .body(body_str)
+        .send()
+        .await
+        .unwrap();
+    println!("{}", res.text().await?);
+    Ok(())
+}

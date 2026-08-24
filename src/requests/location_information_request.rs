@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::utils::request_utils::send_request;
+use crate::utils::common_structures::LocationRef;
 
 
 #[derive(Deserialize)]
@@ -71,13 +72,6 @@ struct InitialInput {
     #[serde(rename = "LocationName")]
     location_name: String
 }
-
-#[derive(Serialize)]
-struct LocationRef {
-    #[serde(rename = "StopPointRef")]
-    id: String
-}
-
 
 pub async fn get_location_by_string(url: &str, input: &str) -> Result<Vec<LocationResult>, Box<dyn std::error::Error>> {
     let payload = LocationInformationRequestPayload{request_information: LocationInformationRequest{initial_input: Some(InitialInput{ location_name: input.to_string()}), location_ref: None, restrictions: Restrictions{ result_type: "stop"}}};
