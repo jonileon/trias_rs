@@ -1,4 +1,6 @@
 use crate::utils::time_format::get_date_time_now;
+use quick_xml::se::to_string;
+use reqwest::Client;
 use crate::utils::env::{EnvVars, get_var};
 use serde::{Deserialize, Serialize};
 use reqwest::Response;
@@ -49,7 +51,7 @@ pub struct ServiceDelivery<T> {
     pub payload: T,
 }
 
-pub fn build_request_envelope<T>(payload: T) -> TriasRequestEnvelope<T> {
+fn build_request_envelope<T>(payload: T) -> TriasRequestEnvelope<T> {
     let version        = get_var(EnvVars::TriasVersion);
     let xmlns          = get_var(EnvVars::Xmlns);
     let xmlns_xsi      = get_var(EnvVars::XsiXmlns);
@@ -65,7 +67,7 @@ pub fn build_request_envelope<T>(payload: T) -> TriasRequestEnvelope<T> {
     } }
 }
 
-pub async fn parse_response<T>(response: Response) -> Result<T, Box<dyn std::error::Error>> 
+async fn parse_response<T>(response: Response) -> Result<T, Box<dyn std::error::Error>> 
     where
     T: serde::de::DeserializeOwned + Send + 'static,
 {
@@ -82,4 +84,24 @@ pub async fn parse_response<T>(response: Response) -> Result<T, Box<dyn std::err
     })
     .await??;
     Ok(result)
+}
+
+pub async fn send_request<ReqPay, ResPay>(payload: ReqPay, url: &str) -> Result<ResPay, Box<dyn std::error::Error>> 
+where 
+    ReqPay: serde::Serialize,
+    ResPay: serde::de::DeserializeOwned + Send + 'static,
+{
+
+    let body: TriasRequestEnvelope<ReqPay> = build_request_envelope(payload);
+    let body_str = to_string(&body).expect("Error while serializing xml: LocationInformationRequest");
+
+    let client = Client::builder().build().unwrap();
+    let res = client.post(url)
+        .header("Content-Type", "application/xml")
+        .body(body_str)
+        .send()
+        .await
+        .unwrap();
+    let result: TriasResponseEnvelope<ResPay> = parse_response(res).await?;
+    Ok(result.service_delivery.payload)
 }

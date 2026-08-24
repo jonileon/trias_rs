@@ -1,8 +1,7 @@
 use serde::{Deserialize, Serialize};
-use quick_xml::se::to_string;
-use reqwest::Client;
 
-use crate::utils::request_utils::{TriasRequestEnvelope, TriasResponseEnvelope, build_request_envelope, parse_response};
+use crate::utils::request_utils::send_request;
+
 
 #[derive(Deserialize)]
 pub struct LocationInformationResultPayload {
@@ -82,32 +81,12 @@ struct LocationRef {
 
 pub async fn get_location_by_string(url: &str, input: &str) -> Result<Vec<LocationResult>, Box<dyn std::error::Error>> {
     let payload = LocationInformationRequestPayload{request_information: LocationInformationRequest{initial_input: Some(InitialInput{ location_name: input.to_string()}), location_ref: None, restrictions: Restrictions{ result_type: "stop"}}};
-    let body: TriasRequestEnvelope<LocationInformationRequestPayload> = build_request_envelope(payload);
-    let body_str = to_string(&body).expect("Error while serializing xml: LocationInformationRequest");
-
-    let client = Client::builder().build().unwrap();
-    let res = client.post(url)
-        .header("Content-Type", "application/xml")
-        .body(body_str)
-        .send()
-        .await
-        .unwrap();
-    let result: TriasResponseEnvelope<LocationInformationResultPayload> = parse_response(res).await?;
-    Ok(result.service_delivery.payload.result_information.location_results)
+    let result: LocationInformationResultPayload =  send_request(payload, url).await?;
+    Ok(result.result_information.location_results)
 }
 
 pub async fn get_location_by_ref(url: &str, stop_ref: &str) -> Result<LocationResult, Box<dyn std::error::Error>> {
     let payload = LocationInformationRequestPayload{request_information: LocationInformationRequest{initial_input: None, location_ref: Some(LocationRef{ id: stop_ref.to_string() }), restrictions: Restrictions{ result_type: "stop"}}};
-    let body: TriasRequestEnvelope<LocationInformationRequestPayload> = build_request_envelope(payload);
-    let body_str = to_string(&body).expect("Error while serializing xml: LocationInformationRequest");
-
-    let client = Client::builder().build().unwrap();
-    let res = client.post(url)
-        .header("Content-Type", "application/xml")
-        .body(body_str)
-        .send()
-        .await
-        .unwrap();
-    let result: TriasResponseEnvelope<LocationInformationResultPayload> = parse_response(res).await?;
-    Ok(result.service_delivery.payload.result_information.location_results.first().unwrap().clone())
+    let result: LocationInformationResultPayload =  send_request(payload, url).await?;
+    Ok(result.result_information.location_results.first().unwrap().clone())
 }
