@@ -106,6 +106,7 @@ where
     Ok(result.service_delivery.payload)
 }
 
+#[allow(dead_code)]
 pub async fn send_request_test<ReqPay>(payload: ReqPay, url: &str) -> Result<(), Box<dyn std::error::Error>> 
 where 
     ReqPay: serde::Serialize,

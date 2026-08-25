@@ -3,6 +3,7 @@ pub mod time_format;
 pub mod env;
 pub mod common_structures;
 
+#[allow(dead_code)]
 pub mod xs_duration {
     use chrono::Duration;
     use serde::{Deserialize, Deserializer, Serializer};
