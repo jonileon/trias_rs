@@ -121,7 +121,7 @@ pub struct ServiceDeparture {
     #[serde(rename = "TimetabledTime")]
     pub original_time: DateTime<Utc>,
     #[serde(rename = "EstimatedTime")]
-    pub estimated_time: DateTime<Utc>,
+    pub estimated_time: Option<DateTime<Utc>>,
 }
 
 pub async fn get_trips_for_location(location_ref: &str, num_results: usize, url: &str) -> Result<Vec<StopEventResult>,Box<dyn std::error::Error>> {
