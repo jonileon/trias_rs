@@ -1,4 +1,5 @@
 use dotenv::{dotenv, var};
+use tokio::time::error;
 use trias_rs::requests::{location_information_request::{get_location_by_ref, get_location_by_string}, stop_event_request::get_trips_for_location};
 
 // example interaction
@@ -38,6 +39,16 @@ async fn main() {
     let stop = get_location_by_ref(&url, &result.first().unwrap().location.stop_point.id).await.unwrap();
     println!("{:#?}", stop);
 
-    get_trips_for_location(&stop.location.stop_point.id, 2, &url).await;
+    let result = get_trips_for_location(&stop.location.stop_point.id, 2, &url).await;
+    match result {
+        Ok(events) => {
+            for event in events {
+                println!("{:#?}", event);
+            }
+        }
+        Err(err) => {
+            println!("Error: {}", err);
+        }
+    }
 }
 

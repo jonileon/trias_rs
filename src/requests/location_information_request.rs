@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::utils::request_utils::send_request;
-use crate::utils::common_structures::LocationRef;
+use crate::utils::common_structures::{LocationRef, TriasString};
 
 
 #[derive(Deserialize)]
@@ -33,15 +33,7 @@ pub struct StopPoint {
     #[serde(rename = "StopPointRef")]
     pub id: String,
     #[serde(rename = "StopPointName")]
-    pub name: StopPointName,
-}
-
-#[derive(Deserialize, Debug, Clone)]
-pub struct StopPointName {
-    #[serde(rename = "Language")]
-    pub lang: String,
-    #[serde(rename = "Text")]
-    pub text: String,
+    pub name: TriasString,
 }
 
 #[derive(Serialize)]
