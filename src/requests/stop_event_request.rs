@@ -2,7 +2,7 @@ use chrono::{DateTime, Duration, Utc};
 use serde::{Deserialize, Serialize};
 
 use crate::utils::common_structures::{LocationRef, Mode, TriasString};
-use crate::utils::request_utils::{send_request, send_request_test};
+use crate::utils::request_utils::send_request;
 
 #[derive(Serialize)]
 struct StopEventRequestPayload {
@@ -126,8 +126,6 @@ pub struct ServiceDeparture {
 
 pub async fn get_trips_for_location(location_ref: &str, num_results: usize, url: &str) -> Result<Vec<StopEventResult>,Box<dyn std::error::Error>> {
     let payload = StopEventRequestPayload{ request: StopEventRequest{ location: LocationContext{ id: LocationRef { id: location_ref.to_string() } } , params: StopEventParams{ num_results, include_realtime_data: true, event_type: "departure".to_string(), time_window: Duration::hours(12) }} };
-    let payload2 = StopEventRequestPayload{ request: StopEventRequest{ location: LocationContext{ id: LocationRef { id: location_ref.to_string() } } , params: StopEventParams{ num_results, include_realtime_data: true, event_type: "departure".to_string(), time_window: Duration::hours(12) }} };
-    send_request_test(payload2, url).await.unwrap();
     let result: StopEventResponsePayload = send_request(payload, url).await?;
     Ok(result.stop_event_response.events)
 }
